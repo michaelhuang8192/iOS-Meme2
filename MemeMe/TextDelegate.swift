@@ -11,11 +11,11 @@ import UIKit
 
 
 class TextDelegate: NSObject, UITextFieldDelegate {
-    let mViewController: ViewController
+    let mViewController: MemeEditorViewController
     var mState = [Int:Bool]()
     var curFocusedTextField: UITextField?
     
-    init(viewController: ViewController) {
+    init(viewController: MemeEditorViewController) {
         mViewController = viewController
     }
     
@@ -24,6 +24,10 @@ class TextDelegate: NSObject, UITextFieldDelegate {
             textField.resignFirstResponder()
         }
         mState.removeAll(keepingCapacity: true)
+    }
+    
+    func getCurFocusedTextField() -> UITextField? {
+        return curFocusedTextField
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -50,7 +54,7 @@ class TextDelegate: NSObject, UITextFieldDelegate {
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
-        return true;
+        return true
     }
     
 }
