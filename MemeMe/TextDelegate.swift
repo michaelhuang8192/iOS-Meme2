@@ -14,12 +14,14 @@ class TextDelegate: NSObject, UITextFieldDelegate {
     let mViewController: MemeEditorViewController
     var mState = [Int:Bool]()
     var curFocusedTextField: UITextField?
+    var shouldTrackState = true
     
     init(viewController: MemeEditorViewController) {
         mViewController = viewController
     }
     
-    func reset() {
+    func reset(shouldTrackState: Bool) {
+        self.shouldTrackState = shouldTrackState
         if let textField = curFocusedTextField {
             textField.resignFirstResponder()
         }
@@ -36,12 +38,13 @@ class TextDelegate: NSObject, UITextFieldDelegate {
             return
         }
         
-        if let _ = mState[textField.tag] {
+        if shouldTrackState {
+            if let _ = mState[textField.tag] {
             
-        } else {
-            textField.text = ""
+            } else {
+                textField.text = ""
+            }
         }
-        
         
     }
     

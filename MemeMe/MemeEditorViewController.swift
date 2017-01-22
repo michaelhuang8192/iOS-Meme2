@@ -26,6 +26,7 @@ UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     ]
     
     var mTextDelegate: TextDelegate!
+    var mMemeIndex = -1
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,8 +43,8 @@ UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        subscribeToKeyboardNotifications()
         
+        subscribeToKeyboardNotifications()
         buttonCamera.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
     }
     
@@ -77,19 +78,27 @@ UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     }
     
     func resetToDefault() {
-        mTextDelegate.reset()
+        var top = "TOP"
+        var bottom = "BOTTOM"
+        var image: UIImage? = nil
+        if mMemeIndex >= 0 {
+            let meme = (UIApplication.shared.delegate as! AppDelegate).memes[mMemeIndex]
+            top = meme.top
+            bottom = meme.bottom
+            image = meme.origImg
+        }
         
-        configureTextField(textField:textTop, content:"TOP")
-        configureTextField(textField:textBottom, content:"BOTTOM")
-        
-        imageView.image = nil
-        buttonShare.isEnabled = false
-        
+        mTextDelegate.reset(shouldTrackState: mMemeIndex < 0)
+        configureTextField(textField:textTop, content:top)
+        configureTextField(textField:textBottom, content:bottom)
+        imageView.image = image
+        buttonShare.isEnabled = image != nil
     }
     
     
     @IBAction func onClickBtnCancel(_ sender: Any) {
-        resetToDefault()
+        goback(true)
+        //resetToDefault()
     }
     
     func keyboardWillShow(_ notification:Notification) {
@@ -128,8 +137,15 @@ UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         toolbarTop.isHidden = true
         toolbarBottom.isHidden = true
         
-        UIGraphicsBeginImageContext(self.view.frame.size)
-        view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
+        let rect = CGRect(
+            x: 0,
+            y: 0,
+            width: view.frame.size.width,
+            height: view.frame.size.height
+        )
+        
+        UIGraphicsBeginImageContext(view.frame.size)
+        view.drawHierarchy(in: rect, afterScreenUpdates: true)
         let img = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
@@ -155,6 +171,25 @@ UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     func save(_ img: UIImage) {
         let meme = Meme(top: textTop.text!, bottom: textBottom.text!, origImg: imageView.image, memeImg: img)
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        if mMemeIndex < 0 {
+            appDelegate.memes.append(meme)
+        } else {
+            appDelegate.memes[mMemeIndex] = meme
+        }
+        
+        goback(false)
+    }
+    
+    func goback(_ animated: Bool) {
+        self.dismiss(animated: animated, completion: nil)
+    }
+    
+    static func presentView(_ callee: UIViewController, memeIndex: Int, completion: (() -> Void)? = nil) {
+        let controller = callee.storyboard!.instantiateViewController(withIdentifier: "MemeEditorViewController") as! MemeEditorViewController
+        controller.mMemeIndex = memeIndex
+        callee.present(controller, animated: true, completion: nil)
     }
     
 }
